@@ -1,18 +1,30 @@
 (ns os-test.core
-  (:require [qbits.spandex :as s]))
+  (:use [slingshot.slingshot :only [try+ throw+]])
+  (:require
+   [clojure.tools.logging :as log]
+   [clojure-commons.config :as config]
+   [os-test.config :as cfg]
+   [qbits.spandex :as s])
+  (:import [java.net URL]))
 
 (defn init-es
   "Establishes a connection to elasticsearch"
   []
-  (let [url      "https://localhost:9200"
-        host-map {:hosts [url]}
-        opts     (merge host-map {:http-client {:basic-auth {:user "admin" :password "admin"}}})
-        conn     (s/client opts)]
+  (let [url      (URL. (cfg/es-uri))
+        host-map {:hosts [(str url)]}
+        opts     (if (or (empty? (cfg/es-user)) (empty? (cfg/es-password)))
+                   host-map
+                   (merge host-map {:http-client {:basic-auth
+                                                  {:user (cfg/es-user)
+                                                   :password (cfg/es-password)}}}))
+        conn     (try
+                   (s/client opts)
+                   (catch Exception e (log/debug e) nil))]
     (if conn
       (do
-        (println (format "Successfully connected to Elasticsearch: %s" url))
+        (log/info (format "Successfully connected to Elasticsearch: %s" url))
         conn)
       (do
-        (println "Failed to find elasticsearch. Retrying...")
+        (log/info "Failed to find elasticsearch. Retrying...")
         (Thread/sleep 1000)
         (recur)))))
