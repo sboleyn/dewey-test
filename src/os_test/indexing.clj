@@ -30,9 +30,11 @@
                 :body doc}))
 
 (defn entity-indexed?
+  ;; DOC FIX
+  ;; Fix ability to pass in id
   [c entity]
   (try
-    (s/request c {:url [(cfg/es-index) :_doc "0f14883e-37fa-11ec-8a85-28924acd7818"]
+    (s/request c {:url [(cfg/es-index) :_doc (str (entity/id entity))]
     ;;(s/request c {:url [(cfg/es-index) :_doc "0f14883e-37fa-11ec-8a85-28924acd781foo"]
                   :method :head}) true
     (catch Exception e (println (format "Error %s" e)) false)))
