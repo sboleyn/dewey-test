@@ -22,20 +22,27 @@
                                :unit "ipc-info-typer"}]}})
 
 (defn index-doc
-  [es doc]
-  (s/request es {:url
-                 [(cfg/es-index) :_doc (str (:id doc))]
-                 :headers {"Content-Type" "application/json"}
-                 :method :put
-                 :body doc}))
+  [c doc]
+  (s/request c {:url
+                [(cfg/es-index) :_doc (str (:id doc))]
+                :method :put
+                :headers {"Content-Type" "application/json"}
+                :body doc}))
 
-;; (defn entity-indexed?
-;;   [es entity]
-;;   (s/request es {:})
-;;   )
+(defn entity-indexed?
+  [c entity]
+  (try
+    (s/request c {:url [(cfg/es-index) :_doc "0f14883e-37fa-11ec-8a85-28924acd7818"]
+    ;;(s/request c {:url [(cfg/es-index) :_doc "0f14883e-37fa-11ec-8a85-28924acd781foo"]
+                  :method :head}) true
+    (catch Exception e (println (format "Error %s" e)) false)))
 
-;; ;; PUT https://<host>:<port>/<index-name>/_doc/<document-id>
-;; {
-;;   "title": "The Wind Rises",
-;;   "release_date": "2013-07-20"
-;; }
+;; client
+;; {:keys [method url headers query-string body keywordize?
+;;         response-consumer-factory exception-handler]
+;;  :or {method :get
+;;       keywordize? true
+;;       exception-handler default-exception-handler
+;;       response-consumer-factory
+;;       HttpAsyncResponseConsumerFactory/DEFAULT}
+;;  :as request-params})
