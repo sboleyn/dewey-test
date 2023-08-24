@@ -1,7 +1,9 @@
 (ns os-test.indexing
   (:require [qbits.spandex :as s]
             [os-test.config :as cfg]
-            [os-test.entity :as entity]))
+            [os-test.entity :as entity]
+            [clojure-commons.file-utils :as file]
+            [os-test.doc-prep :as prep]))
 
 (def docu {:id "0209c39e-37ef-11ec-8a85-28924acd7818"
            :doc_type "file"
@@ -21,7 +23,45 @@
 
                                :unit "ipc-info-typer"}]}})
 
+
+;; client
+;; {:keys [method url headers query-string body keywordize?
+;;         response-consumer-factory exception-handler]
+;;  :or {method :get
+;;       keywordize? true
+;;       exception-handler default-exception-handler
+;;       response-consumer-factory
+;;       HttpAsyncResponseConsumerFactory/DEFAULT}
+;;  :as request-params})
+
+
+;; POST /test-index1/_update/1
+;; {
+;;   "script" : {
+;;     "source": "ctx._source.secret_identity = \"Batman\""
+;;   }
+;; }
+
+;; {
+;;   "script" : {
+;;     "source": "ctx._source.oldValue += params.newValue",
+;;     "lang": "painless",
+;;     "params" : {
+;;       "newValue" : 10
+;;     }
+;;   }
+;; }
+(defn- update-doc
+  "Scripted updates which are only compatible with Elasticsearch 5.x and greater."
+  [c entity script params]
+  (s/request c {:url [(cfg/es-index) :_update (str (entity/id entity))]
+                :method :post
+                :headers {"Content-Type" "application/json"}
+                ;;:body {:script {:inline script :lang "painless" :params params}}}))
+                :body {"script" {"source" script "lang" "painless" "params" params}}}))
+
 (defn index-doc
+  "I tested this one and it indexes."
   [c doc]
   (s/request c {:url
                 [(cfg/es-index) :_doc (str (:id doc))]
@@ -33,18 +73,46 @@
   ;; DOC FIX
   ;; Fix ability to pass in id
   [c entity]
+  ^{:doc "Determines whether or not an iRODS entity has been indexed.
+
+             Parameters:
+               c     - the elasticsearch connection
+               entity - the entity being checked
+
+             Throws:
+               This function can throw an exception if FIX"}
   (try
     (s/request c {:url [(cfg/es-index) :_doc (str (entity/id entity))]
     ;;(s/request c {:url [(cfg/es-index) :_doc "0f14883e-37fa-11ec-8a85-28924acd781foo"]
                   :method :head}) true
     (catch Exception e (println (format "Error %s" e)) false)))
 
-;; client
-;; {:keys [method url headers query-string body keywordize?
-;;         response-consumer-factory exception-handler]
-;;  :or {method :get
-;;       keywordize? true
-;;       exception-handler default-exception-handler
-;;       response-consumer-factory
-;;       HttpAsyncResponseConsumerFactory/DEFAULT}
-;;  :as request-params})
+; XXX - I wish I could think of a way to cleanly and simply separate out the document update logic
+; from the update scripts calls in the following functions. It really belongs with the rest of the
+; document logic in the doc-prep namespace.
+
+(defn update-path
+  "Updates the path of an entity and optionally its modification time
+
+   Parameters:
+     c       - the elasticsearch connection
+     entity   - the entity to update
+     path     - the entity's new path
+     mod-time - (Optional) the entity's modification time"
+  ([c entity path]
+   (update-doc c
+               entity
+               "ctx._source.path = params.path;
+                ctx._source.label = params.label;"
+               {:path  path
+                :label (file/basename path)}))
+
+  ([c entity path mod-time]
+   (update-doc c
+               entity
+               "ctx._source.path = params.path;
+                 ctx._source.label = params.label;
+                 if (params.dateModified > ctx._source.dateModified) { ctx._source.dateModified = params.dateModified };"
+               {:path         path
+                :label        (file/basename path)
+                :dateModified (prep/format-time mod-time)})))

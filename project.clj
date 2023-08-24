@@ -11,5 +11,6 @@
                                [log4j]]]
                  [org.cyverse/clojure-commons "2.8.0"]
                  [cc.qbits/spandex "0.7.11"]
-                 [clj-commons/pomegranate "1.2.0"]]
+                 [clj-commons/pomegranate "1.2.0"] ;;I added this; could remove?
+                 ]
   :repl-options {:init-ns os-test.core})
