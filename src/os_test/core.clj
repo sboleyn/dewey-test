@@ -1,9 +1,12 @@
 (ns os-test.core
+  (:gen-class)
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:require
+   [clojure.tools.cli :as cli]
    [clojure.tools.logging :as log]
    [clj-jargon.init :as irods]
    [clojure-commons.config :as config]
+   [os-test.amq :as amq]
    [os-test.config :as cfg]
    [qbits.spandex :as s])
   (:import [java.net URL]))
