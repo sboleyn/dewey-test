@@ -5,6 +5,13 @@
             :url "https://www.eclipse.org/legal/epl-2.0/"}
   :dependencies [[org.clojure/clojure "1.11.1"]
                  [org.clojure/tools.cli "0.3.1"]
+                 [cheshire "5.5.0"
+                  :exclusions [[com.fasterxml.jackson.dataformat/jackson-dataformat-cbor]
+                               [com.fasterxml.jackson.dataformat/jackson-dataformat-smile]
+                               [com.fasterxml.jackson.core/jackson-annotations]
+                               [com.fasterxml.jackson.core/jackson-databind]
+                               [com.fasterxml.jackson.core/jackson-core]]]
+                 [com.novemberain/langohr "3.5.1"]
                  [slingshot "0.10.3"]
                  [org.cyverse/clj-jargon "3.0.3"
                   :exclusions [[org.slf4j/slf4j-log4j12]
@@ -12,5 +19,6 @@
                  [org.cyverse/clojure-commons "2.8.0"]
                  [cc.qbits/spandex "0.7.11"]
                  [clj-commons/pomegranate "1.2.0"] ;;I added this; could remove?
-                 ]
+
+                 [org.cyverse/service-logging "2.8.2"]]
   :repl-options {:init-ns os-test.core})
