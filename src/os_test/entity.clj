@@ -75,20 +75,6 @@
   (:id entity))
 
 
-;; (defn entity-type
-;;   "Retrieves the type of an entity
-
-;;    Parameter:
-;;      entity - the entity of interest
-
-;;    Returns:
-;;      :collection for a collection and :data-object for a data object."
-;;   [entity]
-;;   (when-let [base (:base entity)]
-;;     (cond
-;;       (.isCollection base) :collection
-;;       (.isDataObject base) :data-object)))
-
 (defn entity-type
   "Retrieves the type of an entity
 
@@ -102,7 +88,6 @@
     (cond
       (.isCollection base) :collection
       (.isDataObject base) :data-object)))
-
 
 (defn path
   "Retrieves the absolute path of the entity.

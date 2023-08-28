@@ -72,6 +72,19 @@
 (defn entity-indexed?
   ;; DOC FIX
   ;; Fix ability to pass in id
+  ;; (ns were-creatures)
+  ;; ➊ (defmulti full-moon-behavior (fn [were-creature] (:were-type were-creature)))
+  ;; ➋ (defmethod full-moon-behavior :wolf
+  ;;     [were-creature]
+  ;;     (str (:name were-creature) " will howl and murder"))
+  ;; ➌ (defmethod full-moon-behavior :simmons
+  ;;     [were-creature]
+  ;;     (str (:name were-creature) " will encourage people and sweat to the oldies"))
+
+
+  ;; (full-moon-behavior {:were-type :wolf
+  ;; ➍                      :name "Rachel from next door"})
+     ; => "Rachel from next door will howl and murder"
   [c entity]
   ^{:doc "Determines whether or not an iRODS entity has been indexed.
 
@@ -112,7 +125,23 @@
                entity
                "ctx._source.path = params.path;
                  ctx._source.label = params.label;
-                 if (params.dateModified > ctx._source.dateModified) { ctx._source.dateModified = params.dateModified };"
+                 if (params.dateModified > ctx._source.dateModified) { ctx._source.dateModified = params.dateModified }"
                {:path         path
                 :label        (file/basename path)
                 :dateModified (prep/format-time mod-time)})))
+
+(defn update-acl
+  "Updates the indexed ACL of an entity.
+
+   Parameters:
+     c     - the elasticsearch connection
+     entity - the entity whose ACL needs to be updated in elasticsearch
+
+   Throws:
+     This function can throw an exception if it can't connect to elasticsearch or iRODS. It can also
+     throw if the entity has no index entry or is not in the iRODS data store."
+  [c entity]
+  (update-doc c
+              entity
+              "ctx._source.userPermissions = params.permissions"
+              {:permissions (prep/format-acl (entity/acl entity))}))

@@ -2,12 +2,13 @@
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:require
    [clojure.tools.logging :as log]
+   [clj-jargon.init :as irods]
    [clojure-commons.config :as config]
    [os-test.config :as cfg]
    [qbits.spandex :as s])
   (:import [java.net URL]))
 
-(defn init-es
+(defn- init-es
   "Establishes a connection to elasticsearch"
   []
   (let [url      (URL. (cfg/es-uri))
@@ -28,3 +29,13 @@
         (log/info "Failed to find elasticsearch. Retrying...")
         (Thread/sleep 1000)
         (recur)))))
+
+(defn- init-irods
+  []
+  (irods/init (cfg/irods-host)
+              (str (cfg/irods-port))
+              (cfg/irods-user)
+              (cfg/irods-pass)
+              (cfg/irods-home)
+              (cfg/irods-zone)
+              (cfg/irods-default-resource)))
