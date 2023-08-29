@@ -1,22 +1,14 @@
-# os-test
+dewey
+=====
 
-A Clojure library designed to ... well, that part is up to you.
+An AMQP message based iRODS indexer for elasticsearch.
 
-## Usage
+dewey listens to the `irods` AMQP topic exchange for iRODS change messages. The iRODS change
+messages are described in the document
+https://docs.google.com/document/d/126uSOX8VWfFyRub1Ibqiknf4QbQuDZLOCktoBLpgqsE/edit. For each
+change message, dewey updates the elasticsearch `data` index with the corresponding change.
 
-FIXME
+License
+-------
 
-## License
-
-Copyright © 2023 FIXME
-
-This program and the accompanying materials are made available under the
-terms of the Eclipse Public License 2.0 which is available at
-http://www.eclipse.org/legal/epl-2.0.
-
-This Source Code may also be made available under the following Secondary
-Licenses when the conditions for such availability set forth in the Eclipse
-Public License, v. 2.0 are satisfied: GNU General Public License as published by
-the Free Software Foundation, either version 2 of the License, or (at your
-option) any later version, with the GNU Classpath Exception which is available
-at https://www.gnu.org/software/classpath/license.html.
+See the file LICENSE.txt.

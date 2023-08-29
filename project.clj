@@ -20,10 +20,11 @@
                   :exclusions [[org.slf4j/slf4j-log4j12]
                                [log4j]]]
                  [org.cyverse/clojure-commons "2.8.0"]
+                 [org.cyverse/common-cli "2.8.1"] ;;
+                 [org.cyverse/service-logging "2.8.2"]
+                 [me.raynes/fs "1.4.6"]
                  [cc.qbits/spandex "0.7.11"]
-                 [clj-commons/pomegranate "1.2.0"] ;;I added this; could remove?
-
-                 [org.cyverse/service-logging "2.8.2"]]
+                 [clj-commons/pomegranate "1.2.0"]] ;;I added this; could remove?]
   :eastwood {:exclude-namespaces [:test-paths]
              :linters [:wrong-arity :wrong-ns-form :wrong-pre-post :wrong-tag :misplaced-docstrings]}
   :plugins [[test2junit "1.1.3"]

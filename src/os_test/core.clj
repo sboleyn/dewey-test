@@ -7,7 +7,13 @@
    [clj-jargon.init :as irods]
    [clojure-commons.config :as config]
    [os-test.amq :as amq]
+   [os-test.curation :as curation]
+   [os-test.status :as status]
    [os-test.config :as cfg]
+   [os-test.events :as events]
+   [common-cli.core :as ccli]
+   [me.raynes.fs :as fs]
+   [service-logging.thread-context :as tc]
    [qbits.spandex :as s])
   (:import [java.net URL]))
 

@@ -1,4 +1,5 @@
 (ns os-test.indexing
+  "This is the logic for making changes to search index."
   (:require [qbits.spandex :as s]
             [os-test.config :as cfg]
             [os-test.entity :as entity]
@@ -51,6 +52,14 @@
 ;;     }
 ;;   }
 ;; }
+(defn- index-doc
+  [c doc]
+  (s/request c {:url
+                [(cfg/es-index) :_doc (str (:id doc))]
+                :method :put
+                :headers {"Content-Type" "application/json"}
+                :body doc}))
+
 (defn- update-doc
   "Scripted updates which are only compatible with Elasticsearch 5.x and greater."
   [c entity script params]
@@ -59,15 +68,6 @@
                 :headers {"Content-Type" "application/json"}
                 ;;:body {:script {:inline script :lang "painless" :params params}}}))
                 :body {"script" {"source" script "lang" "painless" "params" params}}}))
-
-(defn index-doc
-  "I tested this one and it indexes."
-  [c doc]
-  (s/request c {:url
-                [(cfg/es-index) :_doc (str (:id doc))]
-                :method :put
-                :headers {"Content-Type" "application/json"}
-                :body doc}))
 
 (defn entity-indexed?
   ;; DOC FIX
@@ -99,6 +99,68 @@
     ;;(s/request c {:url [(cfg/es-index) :_doc "0f14883e-37fa-11ec-8a85-28924acd781foo"]
                   :method :head}) true
     (catch Exception e (println (format "Error %s" e)) false)))
+
+(defn index-collection
+  "Indexes a collection.
+
+   Parameters:
+     c    - the elasticsearch connection
+     coll  - the collection entity to index
+
+   Throws:
+     This function can throw an exception if it can't connect to elasticsearch or iRODS. The
+     function can also throw one if the collection is not in the iRODS data store."
+  [c coll]
+  (let [folder (prep/format-folder (entity/id coll)
+                                   (entity/path coll)
+                                   (entity/acl coll)
+                                   (entity/creator coll)
+                                   (entity/creation-time coll)
+                                   (entity/modification-time coll)
+                                   (entity/metadata coll))]
+    (index-doc c folder)))
+
+(defn index-data-object
+  "Indexes a data object.
+
+   Parameters:
+     c        - the elasticsearch connection
+     obj       - The CollectionAndDataObjectListingEntry of the data object to index
+     creator   - (Optional) The username of the creator of the data object
+     file-size - (Optional) The byte size of the data object
+     file-type - (Optional) The media type of the data object
+
+   Throws:
+     This function can throw an exception if it can't connect to elasticsearch or iRODS. The
+     function can also throw one if the data object is not in the iRODS data store."
+  [c obj & {:keys [creator file-size file-type]}]
+  (let [file (prep/format-file (entity/id obj)
+                               (entity/path obj)
+                               (entity/acl obj)
+                               (or creator (entity/creator obj))
+                               (entity/creation-time obj)
+                               (entity/modification-time obj)
+                               (entity/metadata obj)
+                               (or file-size (entity/size obj))
+                               (or file-type (entity/media-type obj)))]
+    (index-doc c file)))
+
+(defn remove-entity
+  "Removes an iRODS entity from the search index.
+
+   Parameters:
+     c          - the elasticsearch connection
+     entity-type - :collection|:data-object
+     entity-id   - The UUID of the entity to remove
+
+   Throws:
+     This function can throw an exception if it can't connect to elasticsearch."
+  [c entity-type entity-id]
+  (when (entity-indexed? c entity-type entity-id)
+    (es-doc/delete es (cfg/es-index) (mapping-type-of entity-type) (str entity-id))))
+
+;; I need an entity-indexed that can accept a string
+
 
 ; XXX - I wish I could think of a way to cleanly and simply separate out the document update logic
 ; from the update scripts calls in the following functions. It really belongs with the rest of the
