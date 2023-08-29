@@ -237,6 +237,22 @@
               "ctx._source.userPermissions = params.permissions"
               {:permissions (prep/format-acl (entity/acl entity))}))
 
+(defn update-metadata
+  "Updates the indexed AVU metadata of an entity.
+
+   Parameters:
+     c     - the elasticsearch connection
+     entity - The entity whose metadata needs to be updated in elasticsearch
+
+   Throws:
+     This function can throw an exception if it can't connect to elasticsearch or iRODS. It can also
+     throw if the entity has no index entry or is not in the iRODS data store."
+  [c entity]
+  (update-doc c
+              entity
+              "ctx._source.metadata = params.metadata"
+              {:metadata (prep/format-metadata (entity/metadata entity))}))
+
 (defn update-collection-modify-time
   "Updates the indexed modify time of a collection.
 
