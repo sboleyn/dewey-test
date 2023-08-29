@@ -167,6 +167,9 @@
                                (or file-type (entity/media-type obj)))]
     (index-doc c file)))
 
+
+;; (s/request es {:url ["data_test1" :_doc "0f0f3be6-377c-11ec-8a85-28924acd7818"] :method :delete})
+
 (defn remove-entity
   "Removes an iRODS entity from the search index.
 
@@ -177,9 +180,27 @@
 
    Throws:
      This function can throw an exception if it can't connect to elasticsearch."
-  [c entity-type entity-id]
-  (when (entity-indexed? c entity-type entity-id)
-    (es-doc/delete es (cfg/es-index) (mapping-type-of entity-type) (str entity-id))))
+  [c entity-id]
+  (when (entity-indexed? c (str entity-id))
+    (s/request c {:url [(cfg/es-index) :_doc (str entity-id)]})))
+
+(defn remove-entities-like
+  "Removes iRODS entities from the search index that have a path matching the provide glob. The glob
+   supports * and ? wildcards with their typical meanings.
+
+   This method uses the Elasticsearch 5.x Delete By Query API, and is not backward compatible with
+   earlier versions of Elasticsearch.
+
+   Parameters:
+     c        - the elasticsearch connection
+     path-glob - the glob describing the paths of the entities to remove
+
+   Throws:
+     This function can throw an exception if it can't connect to elasticsearch."
+  [c path-glob]
+  (rest/post es
+             (rest/url-with-path es (cfg/es-index) "_delete_by_query")
+             {:body {:query (es-query/wildcard :path path-glob)}}))
 
 ;; I need an entity-indexed that can accept a string
 
@@ -229,3 +250,19 @@
               entity
               "ctx._source.userPermissions = params.permissions"
               {:permissions (prep/format-acl (entity/acl entity))}))
+
+(defn update-collection-modify-time
+  "Updates the indexed modify time of a collection.
+
+   Parameters:
+     c   - the elasticsearch connection
+     coll - the collection that was modified
+
+   Throws:
+     This function can throw an exception if it can't connect to elasticsearch or iRODS. It can
+     also throw if the collection has no index entry or is not in the iRODS data store."
+  [c coll]
+  (update-doc c
+              coll
+              "if (params.dateModified > ctx._source.dateModified) { ctx._source.dateModified = params.dateModified } else { ctx.op = \"none\" }"
+              {:dateModified (prep/format-time (entity/modification-time coll))}))

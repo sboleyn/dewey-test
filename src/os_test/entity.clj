@@ -29,7 +29,6 @@
     :id    id
     :base  base}))
 
-
 (defn lookup-entity
   ([irods path]
    ^{:doc "Retrieves an entity from iRODS.
