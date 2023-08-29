@@ -69,36 +69,58 @@
                 ;;:body {:script {:inline script :lang "painless" :params params}}}))
                 :body {"script" {"source" script "lang" "painless" "params" params}}}))
 
-(defn entity-indexed?
-  ;; DOC FIX
-  ;; Fix ability to pass in id
-  ;; (ns were-creatures)
-  ;; ➊ (defmulti full-moon-behavior (fn [were-creature] (:were-type were-creature)))
-  ;; ➋ (defmethod full-moon-behavior :wolf
-  ;;     [were-creature]
-  ;;     (str (:name were-creature) " will howl and murder"))
-  ;; ➌ (defmethod full-moon-behavior :simmons
-  ;;     [were-creature]
-  ;;     (str (:name were-creature) " will encourage people and sweat to the oldies"))
+;; (defn entity-indexed?
+;;   ;; DOC FIX
+;;   ;; Fix ability to pass in id
+;;   ;; (ns were-creatures)
+;;   ;; ➊ (defmulti full-moon-behavior (fn [were-creature] (:were-type were-creature)))
+;;   ;; ➋ (defmethod full-moon-behavior :wolf
+;;   ;;     [were-creature]
+;;   ;;     (str (:name were-creature) " will howl and murder"))
+;;   ;; ➌ (defmethod full-moon-behavior :simmons
+;;   ;;     [were-creature]
+;;   ;;     (str (:name were-creature) " will encourage people and sweat to the oldies"))
 
 
-  ;; (full-moon-behavior {:were-type :wolf
-  ;; ➍                      :name "Rachel from next door"})
-     ; => "Rachel from next door will howl and murder"
-  [c entity]
-  ^{:doc "Determines whether or not an iRODS entity has been indexed.
+;;   ;; (full-moon-behavior {:were-type :wolf
+;;   ;; ➍                      :name "Rachel from next door"})
+;;      ; => "Rachel from next door will howl and murder"
+;;   [c entity]
+;;   ^{:doc "Determines whether or not an iRODS entity has been indexed.
 
-             Parameters:
-               c     - the elasticsearch connection
-               entity - the entity being checked
+;;              Parameters:
+;;                c     - the elasticsearch connection
+;;                entity - the entity being checked
 
-             Throws:
-               This function can throw an exception if FIX"}
+;;              Throws:
+;;                This function can throw an exception if FIX"}
+;;   (try
+;;     (s/request c {:url [(cfg/es-index) :_doc (str (entity/id entity))]
+;;     ;;(s/request c {:url [(cfg/es-index) :_doc "0f14883e-37fa-11ec-8a85-28924acd781foo"]
+;;                   :method :head}) true
+;;     (catch Exception e (println (format "Error %s" e)) false)))
+
+(defn indexing-method
+  [entity]
+  (cond
+    (string? entity) :string
+    (map? entity) :map
+    :else :unknown))
+
+(defmulti entity-indexed? (fn [c entity] (indexing-method entity)))
+(defmethod entity-indexed? :string
+  [c entity-id]
   (try
-    (s/request c {:url [(cfg/es-index) :_doc (str (entity/id entity))]
-    ;;(s/request c {:url [(cfg/es-index) :_doc "0f14883e-37fa-11ec-8a85-28924acd781foo"]
+    (s/request c {:url [(cfg/es-index) :_doc entity-id]
                   :method :head}) true
     (catch Exception e (println (format "Error %s" e)) false)))
+(defmethod entity-indexed? :map
+  [c entity]
+  (try
+    (s/request c {:url [(cfg/es-index) :_doc (str (entity/id entity))]
+                  :method :head}) true
+    (catch Exception e (println (format "Error %s" e)) false)))
+
 
 (defn index-collection
   "Indexes a collection.
