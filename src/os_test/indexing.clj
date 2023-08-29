@@ -24,34 +24,6 @@
 
                                :unit "ipc-info-typer"}]}})
 
-
-;; client
-;; {:keys [method url headers query-string body keywordize?
-;;         response-consumer-factory exception-handler]
-;;  :or {method :get
-;;       keywordize? true
-;;       exception-handler default-exception-handler
-;;       response-consumer-factory
-;;       HttpAsyncResponseConsumerFactory/DEFAULT}
-;;  :as request-params})
-
-
-;; POST /test-index1/_update/1
-;; {
-;;   "script" : {
-;;     "source": "ctx._source.secret_identity = \"Batman\""
-;;   }
-;; }
-
-;; {
-;;   "script" : {
-;;     "source": "ctx._source.oldValue += params.newValue",
-;;     "lang": "painless",
-;;     "params" : {
-;;       "newValue" : 10
-;;     }
-;;   }
-;; }
 (defn- index-doc
   [c doc]
   (s/request c {:url
@@ -188,8 +160,8 @@
   "Removes iRODS entities from the search index that have a path matching the provide glob. The glob
    supports * and ? wildcards with their typical meanings.
 
-   This method uses the Elasticsearch 5.x Delete By Query API, and is not backward compatible with
-   earlier versions of Elasticsearch.
+   This method uses the Elasticsearch Delete By Query API, and is not backward compatible with
+  Elasticsearch versions prior to 5.x.
 
    Parameters:
      c        - the elasticsearch connection
@@ -197,13 +169,27 @@
 
    Throws:
      This function can throw an exception if it can't connect to elasticsearch."
+
+  ;; {:keys [method url headers query-string body keywordize?
+;;         response-consumer-factory exception-handler]
+;;  :or {method :get
+;;       keywordize? true
+;;       exception-handler default-exception-handler
+;;       response-consumer-factory
+;;       HttpAsyncResponseConsumerFactory/DEFAULT}
+;;  :as request-params})
+
   [c path-glob]
-  (rest/post es
-             (rest/url-with-path es (cfg/es-index) "_delete_by_query")
-             {:body {:query (es-query/wildcard :path path-glob)}}))
+  ;; (rest/post es
+  ;;            (rest/url-with-path es (cfg/es-index) "_delete_by_query")
+  ;;            {:body {:query (es-query/wildcard :path path-glob)}}))
 
-;; I need an entity-indexed that can accept a string
+  ;; POST <index>/_delete_by_query
 
+  (s/request c {:url [(cfg/es-index) :_delete_by_query]
+                :query-string "analyze_wildcard=true"
+                :method :post
+                :body {:query {:wildcard {:path path-glob}}}}))
 
 ; XXX - I wish I could think of a way to cleanly and simply separate out the document update logic
 ; from the update scripts calls in the following functions. It really belongs with the rest of the
