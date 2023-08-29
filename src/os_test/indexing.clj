@@ -268,3 +268,34 @@
               coll
               "if (params.dateModified > ctx._source.dateModified) { ctx._source.dateModified = params.dateModified } else { ctx.op = \"none\" }"
               {:dateModified (prep/format-time (entity/modification-time coll))}))
+
+(defn update-data-object
+  "Updates the indexed data object. It will update the modification time, file size and optionally
+   file type for the data object.
+
+   Parameters:
+     c        - the elasticsearch connection
+     obj       - the data object that was modified
+     file-size - The data object's file size in bytes.
+     file-type - (OPTIONAL) The media type of the data object.
+
+   Throws:
+     This function can throw an exception if it can't connect to elasticsearch or iRODS. It can
+     also throw if the data object has no index entry or is not in the iRODS data store."
+  ([c obj file-size]
+   (update-doc c
+               obj
+               "if (params.dateModified > ctx._source.dateModified) { ctx._source.dateModified = params.dateModified; }
+                ctx._source.fileSize = params.fileSize;"
+               {:dateModified (prep/format-time (entity/modification-time obj))
+                :fileSize     file-size}))
+
+  ([c obj file-size file-type]
+   (update-doc c
+               obj
+               "if (params.dateModified > ctx._source.dateModified) { ctx._source.dateModified = params.dateModified; }
+                ctx._source.fileSize = params.fileSize;
+                ctx._source.fileType = params.fileType;"
+               {:dateModified (prep/format-time (entity/modification-time obj))
+                :fileSize     file-size
+                :fileType     file-type})))
