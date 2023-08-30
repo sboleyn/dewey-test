@@ -34,6 +34,7 @@
                  [cc.qbits/spandex "0.7.11"]
                  ;;[clj-commons/pomegranate "1.2.0"]
                  ]
+  :repl-options {:init-ns os-test.core}
   ;; :eastwood {:exclude-namespaces [:test-paths]
   ;;            :linters [:wrong-arity :wrong-ns-form :wrong-pre-post :wrong-tag :misplaced-docstrings]}
   ;; :plugins [[test2junit "1.1.3"]
