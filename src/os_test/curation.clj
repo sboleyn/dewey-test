@@ -62,7 +62,7 @@
 
 (defn- apply-if-indexed
   [irods es entity-type entity-id op]
-  (when (indexing/entity-indexed? es entity-type entity-id)
+  (when (indexing/entity-indexed? es entity-id)
     (op)))
 
 ; This function is recursive and could blow the stack if a collection tree is deep, like 500 or more
