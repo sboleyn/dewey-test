@@ -32,8 +32,7 @@
                  [org.cyverse/event-messages "0.0.1"]
                  [me.raynes/fs "1.4.6"]
                  [cc.qbits/spandex "0.7.11"]
-                 ;;[clj-commons/pomegranate "1.2.0"]
-                 ]
+                 [org.apache.httpcomponents/httpcore "4.4.11"]]
   :repl-options {:init-ns os-test.core}
   ;; :eastwood {:exclude-namespaces [:test-paths]
   ;;            :linters [:wrong-arity :wrong-ns-form :wrong-pre-post :wrong-tag :misplaced-docstrings]}
